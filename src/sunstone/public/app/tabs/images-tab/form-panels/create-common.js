@@ -33,6 +33,7 @@ define(function(require) {
   var Config = require('sunstone-config');
   var WizardFields = require('utils/wizard-fields');
   var ProgressBar = require('utils/progress-bar');
+  var Humanize = require('utils/humanize');
 
   var TemplateWizardHTML = require('hbs!./create/wizard');
   var TemplateAdvancedHTML = require('hbs!./create/advanced');
@@ -127,6 +128,7 @@ define(function(require) {
 
     return false;
   }
+
 
   function _setup(context) {
     var that = this;
@@ -287,34 +289,86 @@ define(function(require) {
         fileName = file.fileName;
         file_input = fileName;
 
-        $('#file-uploader-input', context).hide()
+        $('#file-uploader-input', context).hide();
         $("#file-uploader-label", context).html(file.fileName);
+        $("#file-uploader-label", context).show();
+        $('#close_image', context).show();
       });
 
+      $('#close_image', context).on('click', function(){
+          $("#file-uploader-label", context).hide();
+          $('#close_image', context).hide();
+          $('#file-uploader-input', context).show();
+          fileName= '';
+          that.uploader.files.length = 0;
+      });
+      var last_time = 0;
+      var old_size = 0;
+
       that.uploader.on('uploadStart', function() {
-        $('#upload_progress_bars').append(
-          '<div id="' + fileName + 'progressBar" class="row" style="margin-bottom:10px">\
-            <div id="' + fileName + '-info" class="medium-2 columns">\
-              ' + Locale.tr("Uploading...") + '\
-            </div>\
-            <div class="medium-10 columns">\
-              <div class="progressbar">'+
-                ProgressBar.html(0, 1, fileName) + '\
+        last_time = new Date().getTime();
+        old_size = 0;
+        var myThis = this;
+          if(!(myThis.progress() > 0)){
+          var element = $('#upload_progress_bars').append(
+            '<div id="' + fileName + 'progressBar" class="row" style="margin-bottom:10px">\
+              <div id="' + fileName + '-info" class="medium-2 columns">\
+                ' + Locale.tr("Uploading...") + '\
               </div>\
-            </div>\
-          </div>');
+              <div class="medium-10 columns">\
+                <div class="progressbar">'+
+                  ProgressBar.html(0, 1, fileName) + '\
+                </div>\
+                <div>\
+                  <button id="close_upload_image" class="fa fa-times-circle fa fa-lg close_upload_image">   </button>\
+                  <button id="pause_upload_image" class="fa fa-pause fa fa-lg pause_upload_image">   </button>\
+                  <button id="play_upload_image" class="fa fa-play fa fa-lg play_upload_image" hidden="true">   </button>\
+                </div>\
+              </div>\
+              <div class="medium-2 columns">\
+                <div id="speed">speed: </div>\
+                <div id="percent_progress">Completed: </div>\
+                </div>\
+            </div>');
+          }
+          $(".close_upload_image").on('click', function(){
+            myThis.cancel();
+            show=0;
+            if(element)
+              element.remove();
+          });
+          $(".pause_upload_image").on('click', function(){
+            myThis.pause();
+            $(".pause_upload_image").hide();
+            $(".play_upload_image").show();
+          });
+          $(".play_upload_image").on('click', function(){
+            myThis.upload();
+            $(".play_upload_image").hide();
+            $(".pause_upload_image").show();
+          });
       });
 
       that.uploader.on('progress', function() {
+        var time = new Date().getTime();
+        var size = this.getSize() * this.progress();
+        if(time - last_time > 2000){
+          size = size - old_size;
+          var speed = size / ((time - last_time));
+          document.getElementById( 'speed' ).textContent = 'speed: ' + Humanize.size(speed) +'s';
+          last_time = time;
+          old_size = size;
+        }
+        document.getElementById( 'percent_progress' ).textContent = 'Completed: ' + (this.progress().toFixed(3)*100).toFixed(1) +'%';
         $('div.progressbar', $('div[id="' + fileName + 'progressBar"]')).html(
-                              ProgressBar.html(this.progress(), 1, fileName) );
+                              ProgressBar.html(this.progress(), 1, fileName) ); 
       });
     }
-
+    
     return false;
   }
 
-  function _submitWizard(context) {
+ function _submitWizard(context) {
     var that = this;
     var upload = false;
 
