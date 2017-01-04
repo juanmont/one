@@ -20,6 +20,7 @@ define(function(require) {
    */
 
   var TemplateInfo = require('hbs!./auth/html');
+  var TemplateInfoSettings = require('hbs!tabs/settings-tab/panels/auth/html');
   var ResourceSelect = require('utils/resource-select');
   var TemplateUtils = require('utils/template-utils');
   var Locale = require('utils/locale');
@@ -50,6 +51,9 @@ define(function(require) {
   function Panel(info) {
     this.title = Locale.tr("Auth");
     this.icon = "fa-key";
+
+    if(info.tabId == "settings-tab")
+      TemplateInfo = TemplateInfoSettings;
 
     this.element = info[XML_ROOT];
     this.userCreation = new UserCreation(this.tabId, {name: false, password: false, group_select: false});
