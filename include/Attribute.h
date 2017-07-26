@@ -376,6 +376,13 @@ public:
      */
     void merge(VectorAttribute* vattr, bool replace);
 
+     /**
+     * The attributes from vmerged will be copied to this vector if not exists in restricted vector
+     * @param vmerged Vector attribute to merge
+     * @param restricted Vector that contains restricted attributes
+     */
+    void merge(const VectorAttribute& vmerged, const vector<std::string> restricted);
+
     /**
      *  Replace the value of the given vector attribute
      */

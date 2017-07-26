@@ -198,6 +198,36 @@ void VectorAttribute::merge(VectorAttribute* vattr, bool replace)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
+void VectorAttribute::merge(const VectorAttribute& vmerged, const vector<std::string> restricted)
+{
+    map<string, string>::const_iterator it;
+    map<string, string>::iterator       jt;
+
+    const map<string,string>& source_values = vmerged.value();
+
+    for(it=source_values.begin(); it!=source_values.end(); it++)
+    {
+        jt = attribute_value.find(it->first);
+
+        if (jt != attribute_value.end())
+        {
+            if (!(std::find(restricted.begin(), restricted.end(), it->first) != restricted.end()))
+            {
+                attribute_value.erase(jt);
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        attribute_value.insert(make_pair(it->first,it->second));
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 void VectorAttribute::replace(const string& name, const string& value)
 {
     map<string,string>::iterator it;
