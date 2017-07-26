@@ -766,7 +766,7 @@ private:
     /**
      *  The restricted attributes from oned.conf
      */
-    static set<string> restricted_attributes;
+    static vector<string> restricted_attributes;
 
     /**
      *  Attributes to be process for Security Group rules

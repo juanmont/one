@@ -1973,7 +1973,7 @@ int AddressRange::reserve_addr_by_mac(int vid, unsigned int rsize,
 
 bool AddressRange::restricted_set = false;
 
-set<string> AddressRange::restricted_attributes;
+vector<string> AddressRange::restricted_attributes;
 
 bool AddressRange::check(string& rs_attr) const
 {
@@ -1987,7 +1987,7 @@ bool AddressRange::check(string& rs_attr) const
 
     for (it=ar_attrs.begin(); it != ar_attrs.end(); it++)
     {
-        if (restricted_attributes.count(it->first) > 0)
+        if (std::find(restricted_attributes.begin(), restricted_attributes.end(), it->first) != restricted_attributes.end())
         {
             rs_attr = it->first;
             return true;
@@ -2005,12 +2005,13 @@ void AddressRange::set_restricted_attributes(vector<const SingleAttribute *>& ra
     }
 
     restricted_set = true;
+    vector<string>::const_iterator it;
 
     for (unsigned int i = 0 ; i < rattrs.size() ; i++ )
     {
         string attr_s = rattrs[i]->value();
-
-        restricted_attributes.insert(one_util::toupper(attr_s));
+        it = restricted_attributes.begin();
+        restricted_attributes.insert(it ,one_util::toupper(attr_s));
     }
 };
 
@@ -2019,7 +2020,7 @@ void AddressRange::set_restricted_attributes(vector<const SingleAttribute *>& ra
 
 void AddressRange::remove_restricted(VectorAttribute* va)
 {
-    set<string>::const_iterator it;
+    vector<string>::const_iterator it;
     size_t pos;
 
     for (it=restricted_attributes.begin(); it!=restricted_attributes.end(); it++)
@@ -2048,7 +2049,7 @@ void AddressRange::remove_all_except_restricted(VectorAttribute* va)
         oss.str("");
         oss << "AR/" << it->first;
 
-        if (restricted_attributes.count(oss.str()) == 0)
+        if (std::find(restricted_attributes.begin(), restricted_attributes.end(), oss.str()) == restricted_attributes.end())
         {
             va->remove(it->first);
         }
