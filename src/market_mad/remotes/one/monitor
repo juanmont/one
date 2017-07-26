@@ -63,62 +63,12 @@ class OneMarket
     end
 
     def get_appliances()
-        rc, body = get('/appliance')
-
-        if rc != 0
-            return rc, body
+       appstr = ""
+       File.open("/tmp/one_market.monitor", "r") do |f|
+            f.each_line do |line|
+                appstr << line
+            end
         end
-
-        applist = JSON.parse(body)
-        appstr  = ""
-
-        applist['appliances'].each { |app|
-            id     = app["_id"]["$oid"]
-            source = "#{@url}/appliance/#{id}/download/0"
-
-            tmpl = ""
-
-            print_var(tmpl, "NAME",        app["name"])
-            print_var(tmpl, "SOURCE",      source)
-            print_var(tmpl, "IMPORT_ID",   id)
-            print_var(tmpl, "ORIGIN_ID",   "-1")
-            print_var(tmpl, "TYPE",        "IMAGE")
-            print_var(tmpl, "PUBLISHER",   app["publisher"])
-            print_var(tmpl, "FORMAT",      app["format"])
-            print_var(tmpl, "DESCRIPTION", app["short_description"])
-            print_var(tmpl, "VERSION",     app["version"])
-            print_var(tmpl, "TAGS",        app["tags"].join(', '))
-            print_var(tmpl, "REGTIME",     app["creation_time"])
-
-            if !app["files"].nil? && !app["files"][0].nil?
-                file = app["files"][0]
-                size = 0
-
-                if (file["size"].to_i != 0)
-                    size = file["size"].to_i / (2**20)
-                end
-
-                print_var(tmpl, "SIZE", size)
-                print_var(tmpl, "MD5",  file["md5"])
-
-                tmpl64 = ""
-                print_var(tmpl64, "DEV_PREFIX", file["dev_prefix"])
-                print_var(tmpl64, "DRIVER",     file["driver"])
-                print_var(tmpl64, "TYPE",       file["type"])
-
-                if !tmpl64.empty?
-                    print_var(tmpl, "APPTEMPLATE64", Base64::strict_encode64(tmpl64))
-                end
-            end
-
-            if !app["opennebula_template"].nil?
-                vmtmpl64 = template_to_str(JSON.parse(app["opennebula_template"]))
-                print_var(tmpl, "VMTEMPLATE64", Base64::strict_encode64(vmtmpl64))
-            end
-
-            appstr << "APP=\"#{Base64::strict_encode64(tmpl)}\"\n"
-        }
-
         appstr
     end
 
