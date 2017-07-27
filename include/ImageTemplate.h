@@ -76,7 +76,7 @@ public:
 private:
     friend class ImagePool;
 
-    static vector<string> restricted_attributes;
+    static map<string, vector<string>> restricted_attributes;
 
     bool has_restricted()
     {

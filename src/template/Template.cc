@@ -639,8 +639,7 @@ void Template::rebuild_attributes(const xmlNode * root_element)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs,
-    map<string, vector<string>>& restricted_attributes)
+void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs, map<string, vector<string>> restricted_attributes)
 {
     size_t pos;
     string avector, vattr;
@@ -655,9 +654,9 @@ void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs
         {
             avector = rattrs[i]->value().substr(0,pos);
             vattr   = rattrs[i]->value().substr(pos+1);
-            it = restricted_attributes.find(avector);
-            if ( it != restricted_attributes.end() ) { //exits
-                it->second.push_back(vattr);
+            it_map = restricted_attributes.find(avector);
+            if ( it_map != restricted_attributes.end() ) { //exits
+                it_map->second.push_back(vattr);
             }
             else {
                 restricted_attributes.insert(pair<string,vector<string> >(avector, vector<string>()));
@@ -674,7 +673,7 @@ void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-static int get_attributes(
+/*static int get_attributes(
         multimap<string, Attribute *>& attributes,
         const string& name, vector<const Attribute*>& values)
 {
@@ -691,57 +690,20 @@ static int get_attributes(
     }
 
     return j;
-}
+}*/
 
-bool Template::check(string& rs_attr, const map<string, vector<string>>& restricted_attributes)
+bool Template::check(string& rs_attr, const map<string, vector<string>> restricted_attributes)
 {
-    size_t pos;
-    string avector, vattr;
-    vector<const Attribute *> values;
-
-    /*for (unsigned int i=0; i < restricted_attributes.size(); i++)
-    {
-        pos = restricted_attributes[i].find("/");
-
-        if (pos != string::npos) //Vector Attribute
-        {
-            int num;
-
-            avector = restricted_attributes[i].substr(0,pos);
-            vattr   = restricted_attributes[i].substr(pos+1);
-
-            //Template contains the attr
-            if ((num = get_attributes(attributes, avector, values)) > 0 )
-            {
-                const VectorAttribute * attr;
-
-                for (int j=0; j<num ; j++ )
-                {
-                    attr = dynamic_cast<const VectorAttribute *>(values[j]);
-
-                    if (attr == 0)
-                    {
-                        continue;
-                    }
-
-                    if ( !attr->vector_value(vattr.c_str()).empty() )
-                    {
-                        rs_attr = restricted_attributes[i];
-                        return true;
-                    }
-                }
-            }
+    for(map<string, vector<string>>::const_iterator it_map = restricted_attributes.begin(); it_map != restricted_attributes.end(); it_map++) {
+        if (it_map->first == rs_attr){
+            return true;
         }
-        else //Single Attribute
-        {
-            if (get_attributes(attributes, restricted_attributes[i], values) > 0)
-            {
-                rs_attr = restricted_attributes[i];
+        for(std::vector<string>::const_iterator it_v = it_map->second.begin(); it_v != it_map->second.end(); ++it_v) {
+             if (*it_v == rs_attr){
                 return true;
             }
         }
-    }*/
-
+    }
     return false;
 }
 
@@ -787,95 +749,28 @@ static int get_attributes(
     return j;
 }
 
-void Template::remove_restricted(const vector<string> &restricted_attributes)
+void Template::remove_restricted(const map<string, vector<string>> restricted_attributes)
 {
-    size_t pos;
-    string avector, vattr;
-    vector<Attribute *> values;
-
-    for (unsigned int i=0; i < restricted_attributes.size(); i++)
-    {
-        pos = restricted_attributes[i].find("/");
-
-        if (pos != string::npos) //Vector Attribute
-        {
-            int num;
-
-            avector = restricted_attributes[i].substr(0,pos);
-            vattr   = restricted_attributes[i].substr(pos+1);
-
-            //Template contains the attr
-            if ((num = get_attributes(attributes, avector,values)) > 0 )
-            {
-                VectorAttribute * attr;
-
-                for (int j=0; j<num ; j++ )
-                {
-                    attr = dynamic_cast<VectorAttribute *>(values[j]);
-
-                    if (attr == 0)
-                    {
-                        continue;
-                    }
-
-                    attr->remove(vattr);
-                }
-            }
+    for(map<string, vector<string>>::const_iterator it_map = restricted_attributes.begin(); it_map != restricted_attributes.end(); it_map++) {
+        for(std::vector<string>::const_iterator it_v = it_map->second.begin(); it_v != it_map->second.end(); ++it_v) {
+            erase(*it_v);
         }
-        else //Single Attribute
-        {
-            erase(restricted_attributes[i]);
-        }
-    }
+        erase(it_map->first);
+    }           
 }
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void Template::remove_all_except_restricted(const vector<string> &restricted_attributes)
+void Template::remove_all_except_restricted(const map<string, vector<string>> restricted_attributes)
 {
-    size_t pos;
-    string avector, vattr;
-    vector<Attribute *> values;
-
     vector<Attribute *> restricted;
 
-    for (unsigned int i=0; i < restricted_attributes.size(); i++)
-    {
-        pos = restricted_attributes[i].find("/");
-
-        if (pos != string::npos) //Vector Attribute
-        {
-            int num;
-
-            avector = restricted_attributes[i].substr(0,pos);
-            vattr   = restricted_attributes[i].substr(pos+1);
-
-            //Template contains the attr
-            if ((num = get_attributes(attributes, avector,values)) > 0 )
-            {
-                VectorAttribute * attr;
-
-                for (int j=0; j<num ; j++ )
-                {
-                    attr = dynamic_cast<VectorAttribute *>(values[j]);
-
-                    if (attr == 0)
-                    {
-                        continue;
-                    }
-
-                    if ( !attr->vector_value(vattr.c_str()).empty() )
-                    {
-                        restricted.push_back(attr);
-                    }
-                }
-            }
+    for(map<string, vector<string>>::const_iterator it_map = restricted_attributes.begin(); it_map != restricted_attributes.end(); it_map++) {
+        for(std::vector<string>::const_iterator it_v = it_map->second.begin(); it_v != it_map->second.end(); ++it_v) {
+            get_attributes(attributes, *it_v, restricted);
         }
-        else //Single Attribute
-        {
-            get_attributes(attributes, restricted_attributes[i], restricted);
-        }
+        get_attributes(attributes, it_map->first, restricted);
     }
 
     vector<Attribute *>::iterator res_it;

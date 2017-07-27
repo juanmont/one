@@ -62,7 +62,7 @@ private:
 
     friend class VirtualNetworkPool;
 
-    static vector<string> restricted_attributes;
+    static map<string, vector<string>> restricted_attributes;
 
     bool has_restricted()
     {

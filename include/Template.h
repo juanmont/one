@@ -462,24 +462,24 @@ protected:
      */
     static void set_restricted_attributes(
             vector<const SingleAttribute *>& rattrs,
-            map<string, vector<string>>& restricted_attributes);
+            map<string, vector<string>> restricted_attributes);
 
     /**
      *  Checks the template for RESTRICTED ATTRIBUTES
      *    @param rs_attr the first restricted attribute found if any
      *    @return true if a restricted attribute is found in the template
      */
-    bool check(string& rs_attr, const vector<string> &restricted_attributes);
+    bool check(string& rs_attr, const map<string, vector<string>> restricted_attributes);
 
     /**
      * Deletes all restricted attributes
      */
-    void remove_restricted(const vector<string> &restricted_attributes);
+    void remove_restricted(const map<string, vector<string>> restricted_attributes);
 
     /**
      * Deletes all the attributes, except the restricted ones
      */
-    void remove_all_except_restricted(const vector<string> &restricted_attributes);
+    void remove_all_except_restricted(const map<string, vector<string>> restricted_attributes);
 
     /**
      * Updates the xml root element name
