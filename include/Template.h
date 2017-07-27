@@ -462,7 +462,7 @@ protected:
      */
     static void set_restricted_attributes(
             vector<const SingleAttribute *>& rattrs,
-            vector<string>& restricted_attributes);
+            map<string, vector<string>>& restricted_attributes);
 
     /**
      *  Checks the template for RESTRICTED ATTRIBUTES

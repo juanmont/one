@@ -640,12 +640,34 @@ void Template::rebuild_attributes(const xmlNode * root_element)
 /* -------------------------------------------------------------------------- */
 
 void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs,
-    vector<string>& restricted_attributes)
+    map<string, vector<string>>& restricted_attributes)
 {
-    for (unsigned int i = 0 ; i < rattrs.size() ; i++ )
+    size_t pos;
+    string avector, vattr;
+    vector<const Attribute *> values;
+    map<string,vector<string>>::iterator it_map;
+
+    for (unsigned int i=0; i < rattrs.size(); i++)
     {
-        string va = rattrs[i]->value();
-        restricted_attributes.push_back(one_util::toupper(va));
+        pos = rattrs[i]->value().find("/");
+
+        if (pos != string::npos) //Vector Attribute
+        {
+            avector = rattrs[i]->value().substr(0,pos);
+            vattr   = rattrs[i]->value().substr(pos+1);
+            it = restricted_attributes.find(avector);
+            if ( it != restricted_attributes.end() ) { //exits
+                it->second.push_back(vattr);
+            }
+            else {
+                restricted_attributes.insert(pair<string,vector<string> >(avector, vector<string>()));
+                restricted_attributes[avector].push_back(vattr);
+            }
+        }
+        else //Single Attribute
+        {
+             restricted_attributes.insert(pair<string,vector<string> >(rattrs[i]->value(), vector<string>()));
+        }
     }
 }
 
@@ -671,13 +693,13 @@ static int get_attributes(
     return j;
 }
 
-bool Template::check(string& rs_attr, const vector<string> &restricted_attributes)
+bool Template::check(string& rs_attr, const map<string, vector<string>>& restricted_attributes)
 {
     size_t pos;
     string avector, vattr;
     vector<const Attribute *> values;
 
-    for (unsigned int i=0; i < restricted_attributes.size(); i++)
+    /*for (unsigned int i=0; i < restricted_attributes.size(); i++)
     {
         pos = restricted_attributes[i].find("/");
 
@@ -718,7 +740,7 @@ bool Template::check(string& rs_attr, const vector<string> &restricted_attribute
                 return true;
             }
         }
-    }
+    }*/
 
     return false;
 }
