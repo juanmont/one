@@ -637,6 +637,61 @@ void Template::merge(const Template * from_tmpl, const map<string, vector<string
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
+void merge(const Template * from_tmpl,const map<string, vector<string>> restricted_attributes,
+       const map<string,string> check_multiple_attributes)
+    {
+    std::pair <std::multimap<string,Attribute *>::iterator, std::multimap<string,Attribute *>::iterator> ret; //Iterator for multiple attributes
+    multimap<string,Attribute *>::const_iterator it; //iterator for the FROM_TMPL
+    multimap<string,Attribute *>::const_iterator it_attr; //iterator for the THIS->ATTRIBUTES
+    map<string,vector<string>>::const_iterator it_map; // iterator for the RESTRICTED_ATTRIBUTES
+    map<string,string>::const_iterator it_multiple; // iterator for the CHECK_MULTIPLE_ATTRIBUTES
+
+    VectorAttribute *vattr, *from_vattr;
+    string from_value, tmpl_value;
+
+    for (it = from_tmpl->attributes.begin(); it != from_tmpl->attributes.end(); ++it)
+    {
+        if ( it->second->type() == 0 ) { //simpleAttribute
+            if( !check(it->first, restricted_attributes)) { //check restricted attribute
+                this->erase(it->first);
+                this->set(it->second->clone());
+            }
+        } else if ( it->second->type() == 1 ) { //vector
+            it_map = restricted_attributes.find(it->first);
+
+            it_multiple = check_multiple_attributes.find(it->first);
+            if (it_multiple != check_multiple_attributes.end()){ //check if this attribute is a multiple attribute
+                int rc, from_rc;
+                from_vattr = dynamic_cast<VectorAttribute*>(it->second);
+
+                ret = this->attributes.equal_range(it->first);
+                for (std::multimap<string,Atribute *>::iterator it_ret=ret.first; it_ret!=ret.second; ++it_ret){
+
+                    vattr = dynamic_cast<VectorAttribute*>(it_ret->second);
+
+                    from_rc = from_vattr.vector_value(it_multiple->second, from_value);
+
+                    rc = vattr.vector_value(it_multiple->second, tmpl_value);
+
+                    if ( from_rc == 0 && rc == 0 && from_value == tmpl_value){ //found element by ID
+                        break;
+                    }
+                }
+            } else {
+                it_attr = this->attributes.find(it->first);
+                vattr = dynamic_cast<VectorAttribute*>(it_attr->second);
+                from_vattr = dynamic_cast<VectorAttribute*>(it->second);
+            }
+
+            if (it_map != restricted_attributes.end()){ //have restricted attribute for this key
+                vattr->merge(from_vattr, it_map->second);
+            } else {
+                vattr->merge(from_vattr, true);
+            }
+        }
+    }
+}
+
 void Template::rebuild_attributes(const xmlNode * root_element)
 {
     xmlNode * cur_node = 0;

@@ -21,5 +21,9 @@
 
 map<string, vector<string>> VirtualNetworkTemplate::restricted_attributes;
 
+map<string,string> VirtualNetworkTemplate::check_multiple_attributes = {
+   {"AR", "AR_ID"}
+};
+
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */

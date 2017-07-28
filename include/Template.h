@@ -418,6 +418,14 @@ public:
      void merge(const Template * from_tmpl, const map<string, vector<string>> restricted_attributes);
 
      /**
+     *  Merges another Template, adding the new attributes and
+     *  replacing the existing ones, Always checking with the restricted attributes and check multiples attributes
+     *
+     *    @param from_tmpl the template to be merged
+     */
+     void merge(const Template * from_tmpl, const map<string, vector<string>> restricted_attributes,const map<string,string> check_multiple_attributes);
+
+     /**
       * Deletes all restricted attributes
       */
      virtual void remove_restricted();

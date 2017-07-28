@@ -43,6 +43,16 @@ public:
     };
 
     /**
+     *  Merges another Template, adding the new attributes and
+     *  replacing the existing ones
+     *    @param from_tmpl the template to be merged
+     */
+    void merge(const Template * from_tmpl)
+    {
+        Template::merge(from_tmpl, restricted_attributes, check_multiple_attributes);
+    }
+
+    /**
      * Deletes all restricted attributes
      */
     void remove_restricted()
@@ -63,6 +73,8 @@ private:
     friend class VirtualNetworkPool;
 
     static map<string, vector<string>> restricted_attributes;
+
+    static map<string, string> check_multiple_attributes;
 
     bool has_restricted()
     {
