@@ -605,6 +605,38 @@ void Template::merge(const Template * from_tmpl)
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
+void Template::merge(const Template * from_tmpl, const map<string, vector<string>> restricted_attributes)
+{
+    multimap<string,Attribute *>::const_iterator it;
+    multimap<string,Attribute *>::const_iterator it_attr;
+    map<string,vector<string>>::const_iterator it_map;
+    vector<string>::const_iterator it_v;
+    VectorAttribute *vattr, *from_vattr;
+
+    for (it = from_tmpl->attributes.begin(); it != from_tmpl->attributes.end(); ++it)
+    {
+        if ( it->second->type() == 0 ) { //simpleAttribute
+            if( !check(it->first, restricted_attributes)) { //check restricted attribute
+                this->erase(it->first);
+                this->set(it->second->clone());
+            }
+        } else if ( it->second->type() == 1 ) { //vector
+            it_map = restricted_attributes.find(it->first);
+            it_attr = this->attributes.find(it->first);
+            vattr = dynamic_cast<VectorAttribute*>(it_attr->second);
+            from_vattr = dynamic_cast<VectorAttribute*>(it->second);
+            if (it_map != restricted_attributes.end()){ //have restricted attribute for this key
+                vattr->merge(from_vattr, it_map->second);
+            } else {
+                vattr->merge(from_vattr, true);
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------ */
+/* ------------------------------------------------------------------------ */
+
 void Template::rebuild_attributes(const xmlNode * root_element)
 {
     xmlNode * cur_node = 0;
@@ -692,7 +724,7 @@ void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs
     return j;
 }*/
 
-bool Template::check(string& rs_attr, const map<string, vector<string>> restricted_attributes)
+bool Template::check(string rs_attr, const map<string, vector<string>> restricted_attributes)
 {
     for(map<string, vector<string>>::const_iterator it_map = restricted_attributes.begin(); it_map != restricted_attributes.end(); it_map++) {
         if (it_map->first == rs_attr){
