@@ -44,6 +44,15 @@ public:
     };
 
     /**
+     *  Merges another Template, adding the new attributes and
+     *  replacing the existing ones
+     *    @param from_tmpl the template to be merged
+     */
+    void merge(const Template * from_tmpl){
+        Template::merge(from_tmpl, restricted_attributes);
+    }
+
+    /**
      * Deletes all restricted attributes
      */
     void remove_restricted()

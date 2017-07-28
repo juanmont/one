@@ -671,7 +671,7 @@ void Template::rebuild_attributes(const xmlNode * root_element)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs, map<string, vector<string>> restricted_attributes)
+void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs, map<string, vector<string>>& restricted_attributes)
 {
     size_t pos;
     string avector, vattr;
@@ -724,7 +724,7 @@ void Template::set_restricted_attributes(vector<const SingleAttribute *>& rattrs
     return j;
 }*/
 
-bool Template::check(string rs_attr, const map<string, vector<string>> restricted_attributes)
+bool Template::check(string rs_attr, const map<string, vector<string>>& restricted_attributes)
 {
     for(map<string, vector<string>>::const_iterator it_map = restricted_attributes.begin(); it_map != restricted_attributes.end(); it_map++) {
         if (it_map->first == rs_attr){

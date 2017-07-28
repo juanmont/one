@@ -407,7 +407,7 @@ public:
      *
      *    @param from_tmpl the template to be merged
      */
-     void merge(const Template * from_tmpl);
+     virtual void merge(const Template * from_tmpl);
 
     /**
      *  Merges another Template, adding the new attributes and
@@ -470,14 +470,14 @@ protected:
      */
     static void set_restricted_attributes(
             vector<const SingleAttribute *>& rattrs,
-            map<string, vector<string>> restricted_attributes);
+            map<string, vector<string>>& restricted_attributes);
 
     /**
      *  Checks the template for RESTRICTED ATTRIBUTES
      *    @param rs_attr the first restricted attribute found if any
      *    @return true if a restricted attribute is found in the template
      */
-    bool check(string rs_attr, const map<string, vector<string>> restricted_attributes);
+    bool check(string rs_attr, const map<string, vector<string>>& restricted_attributes);
 
     /**
      * Deletes all restricted attributes

@@ -194,19 +194,16 @@ int PoolObjectSQL::replace_template(
 
     if (keep_restricted && new_tmpl->has_restricted())
     {
-        new_tmpl->remove_restricted();
-
         if (obj_template != 0)
         {
-            obj_template->remove_all_except_restricted();
-
-            new_tmpl->merge(obj_template);
+            obj_template->merge(new_tmpl);
+            delete new_tmpl;
         }
+    } else {
+        delete obj_template;
+
+        obj_template = new_tmpl;
     }
-
-    delete obj_template;
-
-    obj_template = new_tmpl;
 
     if (post_update_template(error) == -1)
     {
