@@ -19,6 +19,7 @@
 #include "PoolObjectAuth.h"
 #include "Nebula.h"
 #include "Quotas.h"
+#include "RequestManagerClone.h"
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -3138,5 +3139,114 @@ void VirtualMachineDiskResize::request_execute(
         success_response(did, att);
     }
 
+    return;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+const string remove_vnet_attrs[] ={ "AR_ID", "BRIDGE", "CLUSTER_ID", "IP", "MAC", "TARGET", "NIC_ID", "NETWORK_ID", "VN_MAD", "SECURITY_GROUPS" };
+void VirtualMachineSaveas::request_execute(
+    xmlrpc_c::paramList const&  paramList,
+    RequestAttributes&          att)
+{
+    int id      = xmlrpc_c::value_int(paramList.getInt(1));
+    string name     = xmlrpc_c::value_string(paramList.getString(2));
+    string description = xmlrpc_c::value_string(paramList.getString(3));
+    bool persistent = xmlrpc_c::value_boolean(paramList.getBoolean(4));
+
+    ostringstream oss;
+    string new_cpu, new_mem;
+    vector<VectorAttribute *> pci_devs;
+
+    vector<VectorAttribute *> tmp_nic;
+    VectorAttribute* vatt;
+
+    VirtualMachineTemplate* tmpl;
+    VirtualMachineTemplate * new_tmpl = 0;
+
+    if ( vm_authorization(id, 0, 0, att, 0, 0, 0, auth_op) == false )
+    {
+        return;
+    }
+
+    VMTemplatePool * tpool = static_cast<VMTemplatePool *>(pool);
+    VirtualMachinePool * vmpool = static_cast<VirtualMachinePool *>(pool);
+    VirtualMachine * vm = vmpool->get(id, true);
+
+    if ( vm == 0 )
+    {
+        oss << "Could not create a new template for VM " << id
+            << ", VM does not exist" ;
+        att.resp_msg = oss.str();
+
+        NebulaLog::log("DiM", Log::ERROR, att.resp_msg);
+
+        vm->unlock();
+        failure_response(ACTION, att);
+    }
+
+    VirtualMachine::VmState  state  = vm->get_state();
+
+    if (state !=VirtualMachine::POWEROFF)
+    {
+        oss << "Could not create a new template for VM " << id
+            << ", wrong state " << vm->state_str() << ".";
+        att.resp_msg = oss.str();
+
+        NebulaLog::log("DiM", Log::ERROR, att.resp_msg);
+
+        vm->unlock();
+        failure_response(ACTION, att);
+    }
+
+    //Clone VMTemplate
+    tmpl = vm->clone_template();
+
+    vm->unlock();
+
+    //Add NAME to template
+    tmpl->add("NAME", name);
+
+    //NIC Section
+    tmpl->get("NIC", tmp_nic);
+
+    vector<VectorAttribute *>::iterator it;
+    for (it=tmp_nic.begin(); it != tmp_nic.end(); it++)
+    {
+        vatt = dynamic_cast<VectorAttribute*>(*it);
+
+        if (vatt == 0)
+        {
+            delete *it;
+
+            continue;
+        }
+        tmpl->remove(vatt); //Not free the attribute
+
+        for(const string &vnet_attr : remove_vnet_attrs){
+            vatt->remove(vnet_attr);
+        }
+    }
+
+    tmpl->set(tmp_nic);
+
+    //DISK
+    tmpl->erase("DISK");
+
+    //CREATE NEW TEMPLATE
+    new_tmpl = new VirtualMachineTemplate(*tmpl);
+
+    int rc = tpool->allocate(att.uid, att.gid, att.uname, att.gname, att.umask,
+        new_tmpl, &id, att.resp_msg);
+
+    if ( rc < 0 )
+    {
+        failure_response(INTERNAL, att);
+        return;
+    } else {
+        success_response(id, att);
+    }
+
+    delete tmpl;
     return;
 }

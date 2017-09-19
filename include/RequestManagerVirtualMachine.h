@@ -545,4 +545,25 @@ private:
     ImagePool* ipool;
 };
 
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+class VirtualMachineSaveas: public RequestManagerVirtualMachine
+{
+public:
+    VirtualMachineSaveas():
+        RequestManagerVirtualMachine("one.vm.saveas",
+                           "Save a VM as template",
+                           "A:sissb"){
+        Nebula& nd = Nebula::instance();
+
+        auth_op = nd.get_vm_auth_op(History::SAVEAS_TEMPLATE);
+    };
+
+    ~VirtualMachineSaveas(){};
+
+    void request_execute(xmlrpc_c::paramList const& _paramList,
+            RequestAttributes& att);
+};
+
 #endif

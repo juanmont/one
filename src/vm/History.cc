@@ -537,6 +537,9 @@ string History::action_to_str(VMAction action)
         case MONITOR_ACTION:
             st = "monitor";
         break;
+        case SAVEAS_TEMPLATE:
+            st = "saveas-template";
+        break;
         case NONE_ACTION:
             st = "none";
         break;
@@ -710,6 +713,10 @@ int History::action_from_str(const string& st, VMAction& action)
     else if ( st == "monitor")
     {
         action = MONITOR_ACTION;
+    }
+    else if ( st == "saveas-template")
+    {
+        action = SAVEAS_TEMPLATE;
     }
     else
     {

@@ -53,6 +53,7 @@ public class VirtualMachine extends PoolElement{
     private static final String DISKSNAPSHOTDELETE  = METHOD_PREFIX + "disksnapshotdelete";
     private static final String DISKRESIZE          = METHOD_PREFIX + "diskresize";
     private static final String UPDATECONF          = METHOD_PREFIX + "updateconf";
+    private static final String UPDATECONF          = METHOD_PREFIX + "saveas";
 
     private static final String[] VM_STATES =
     {
