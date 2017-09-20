@@ -48,7 +48,7 @@ module OpenNebula
             :disksnapshotdelete => "vm.disksnapshotdelete",
             :diskresize     => "vm.diskresize",
             :updateconf     => "vm.updateconf",
-            :saveas         => "vm.saveas",
+            :saveas_template    => "vm.saveas",
         }
 
         VM_STATE=%w{INIT PENDING HOLD ACTIVE STOPPED SUSPENDED DONE FAILED
@@ -210,7 +210,7 @@ module OpenNebula
             disk-snapshot-create disk-snapshot-delete terminate terminate-hard
             disk-resize deploy chown chmod updateconf rename resize update
             snapshot-resize snapshot-delete snapshot-revert disk-saveas
-            disk-snapshot-revert recover retry monitor}
+            disk-snapshot-revert recover retry monitor saveas-template}
 
         EXTERNAL_IP_ATTRS = [
             'GUEST_IP',
@@ -744,8 +744,9 @@ module OpenNebula
         #
         # @return [Integer, OpenNebula::Error] the new Template ID in case of
         #   success, error otherwise
-        def save_as_template(name, description = "", persistent=nil)
-            return call(VM_METHODS[:saveas], @pe_id, name, description, persistent)
+        def save_as_template(name, description, persistent=nil)
+            description = "" if description.nil?
+            return call(VM_METHODS[:saveas_template], @pe_id, name, description, persistent)
         end
 
     private

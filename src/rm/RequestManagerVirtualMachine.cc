@@ -3144,21 +3144,23 @@ void VirtualMachineDiskResize::request_execute(
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
-const string remove_vnet_attrs[] ={ "AR_ID", "BRIDGE", "CLUSTER_ID", "IP", "MAC", "TARGET", "NIC_ID", "NETWORK_ID", "VN_MAD", "SECURITY_GROUPS" };
 void VirtualMachineSaveas::request_execute(
     xmlrpc_c::paramList const&  paramList,
     RequestAttributes&          att)
 {
+    string remove_vnet_attrs[] ={ "AR_ID", "BRIDGE", "CLUSTER_ID", "IP", "MAC", "TARGET", "NIC_ID", "NETWORK_ID", "VN_MAD", "SECURITY_GROUPS" };
     int id      = xmlrpc_c::value_int(paramList.getInt(1));
     string name     = xmlrpc_c::value_string(paramList.getString(2));
     string description = xmlrpc_c::value_string(paramList.getString(3));
-    bool persistent = xmlrpc_c::value_boolean(paramList.getBoolean(4));
+    //bool persistent = xmlrpc_c::value_boolean(paramList.getBoolean(4));
 
     ostringstream oss;
     string new_cpu, new_mem;
     vector<VectorAttribute *> pci_devs;
 
     vector<VectorAttribute *> tmp_nic;
+    vector<VectorAttribute *> aux_erase;
+    vector<VectorAttribute *>::iterator it;
     VectorAttribute* vatt;
 
     VirtualMachineTemplate* tmpl;
@@ -3207,10 +3209,28 @@ void VirtualMachineSaveas::request_execute(
     //Add NAME to template
     tmpl->add("NAME", name);
 
+    //Erase invalid attributes
+    tmpl->erase("VMID");
+    tmpl->erase("TEMPLATE_ID");
+    tmpl->erase("AUTOMATIC_DS_REQUIREMENTS");
+    tmpl->erase("AUTOMATIC_REQUIREMENTS");
+    tmpl->get("GRAPHICS", aux_erase);
+    for (it=aux_erase.begin(); it != aux_erase.end(); it++)
+    {
+        vatt = dynamic_cast<VectorAttribute*>(*it);
+        vatt->remove("PORT");
+    }
+    tmpl->get("CONTEXT", aux_erase);
+    for (it=aux_erase.begin(); it != aux_erase.end(); it++)
+    {
+        vatt = dynamic_cast<VectorAttribute*>(*it);
+        vatt->remove("DISK_ID");
+        vatt->remove("TARGET");
+    }
+
     //NIC Section
     tmpl->get("NIC", tmp_nic);
 
-    vector<VectorAttribute *>::iterator it;
     for (it=tmp_nic.begin(); it != tmp_nic.end(); it++)
     {
         vatt = dynamic_cast<VectorAttribute*>(*it);
