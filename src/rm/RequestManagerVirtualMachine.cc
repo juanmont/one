@@ -20,6 +20,8 @@
 #include "Nebula.h"
 #include "Quotas.h"
 #include "RequestManagerClone.h"
+#include "RequestManagerImage.h"
+#include "RequestManagerDelete.h"
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -3228,7 +3230,7 @@ void VirtualMachineSaveas::request_execute(
         vatt->remove("TARGET");
     }
 
-    //NIC Section
+    //---------------NICS------------------------
     tmpl->get("NIC", tmp_nic);
 
     for (it=tmp_nic.begin(); it != tmp_nic.end(); it++)
@@ -3249,12 +3251,11 @@ void VirtualMachineSaveas::request_execute(
     }
 
     tmpl->set(tmp_nic);
-
-    //DISK
-    tmpl->erase("DISK");
+    //-----------------------------------------------
 
     //CREATE NEW TEMPLATE
     new_tmpl = new VirtualMachineTemplate(*tmpl);
+    delete tmpl;
 
     int rc = tpool->allocate(att.uid, att.gid, att.uname, att.gname, att.umask,
         new_tmpl, &id, att.resp_msg);
@@ -3264,9 +3265,110 @@ void VirtualMachineSaveas::request_execute(
         failure_response(INTERNAL, att);
         return;
     } else {
+    //----------------DISKS--------------------------
+        ErrorCode ec;
+        ImageDelete     img_delete;
+        ImageClone      img_clone;
+        ImagePersistent img_persistent;
+
+        vector<int> new_ids;
+
+        int ndisk = 0;
+        vector<VectorAttribute *> vdisks;
+
+        VirtualMachineDisks disks(false);
+        VirtualMachineDisks::disk_iterator disk;
+
+        RequestAttributes del_att(att);
+        RequestAttributes img_att(att);
+        img_att.resp_obj    = PoolObjectSQL::IMAGE;
+
+        VMTemplate * vmtmpl = tpool->get(id, true);
+
+        if (vmtmpl == 0)
+        {
+            att.resp_msg = "VM template was removed during clone operation";
+
+            failure_response(INTERNAL, att);
+            return;
+        }
+
+        vmtmpl->clone_disks(vdisks);
+
+        vmtmpl->unlock();
+
+        disks.init(vdisks, false);
+
+        for ( disk = disks.begin(); disk != disks.end() ; ++disk )
+        {
+            int img_id;
+            int new_img_id;
+
+            if ( (*disk)->get_image_id(img_id, att.uid) == 0)
+            {
+                ostringstream oss;
+
+                oss << name << "-disk-" << ndisk;
+
+                ec = img_clone.request_execute(img_id,oss.str(),-1, new_img_id,img_att);
+
+                if ( ec != SUCCESS)
+                {
+                    NebulaLog::log("ReM", Log::ERROR, failure_message(ec, img_att));
+
+                    att.resp_msg = "Failed to clone images: " + img_att.resp_msg;
+
+                    failure_response(INTERNAL, att);
+                    return;
+                }
+
+                if ( (*disk)->is_managed() )
+                {
+                    ec = img_persistent.request_execute(new_img_id, true, img_att);
+
+                    if (ec != SUCCESS)
+                    {
+                        NebulaLog::log("ReM",Log::ERROR,failure_message(ec,img_att));
+
+                        img_delete.request_execute(img_id, img_att);
+
+                        att.resp_msg = "Failed to clone images: " + img_att.resp_msg;
+
+                        failure_response(INTERNAL, att);
+                        return;
+                    }
+                }
+
+                (*disk)->remove("IMAGE");
+                (*disk)->remove("IMAGE_UNAME");
+                (*disk)->remove("IMAGE_UID");
+
+                (*disk)->replace("IMAGE_ID", new_img_id);
+
+                new_ids.push_back(new_img_id);
+            }
+
+            ndisk++;
+        }
+
+        vmtmpl = tpool->get(id, true);
+
+        if (vmtmpl == 0)
+        {
+            att.resp_msg = "VM template was removed during clone operation.";
+
+            failure_response(INTERNAL, att);
+            return;
+        }
+
+        vmtmpl->replace_disks(vdisks);
+
+        tpool->update(vmtmpl);
+
+        vmtmpl->unlock();
+        //-----------------------------------------------
         success_response(id, att);
     }
 
-    delete tmpl;
     return;
 }
