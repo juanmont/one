@@ -516,6 +516,7 @@ in the frontend machine.
         puts str % ["GROUP", vm['GNAME']]
         puts str % ["STATE", vm.state_str]
         puts str % ["LCM_STATE", vm.lcm_state_str]
+        puts str % ["LOCK", level_lock_to_str(vm['LOCK/LOCKED'])]
         puts str % ["RESCHED", OpenNebulaHelper.boolean_to_str(vm['RESCHED'])]
         puts str % ["HOST",
             vm['/VM/HISTORY_RECORDS/HISTORY[last()]/HOSTNAME']] if
@@ -1175,5 +1176,22 @@ in the frontend machine.
         end
 
         table.show(snapshots)
+    end
+
+    def level_lock_to_str(str)
+        level = str.to_i
+        if level == 0
+            "None"
+        elsif level == 1
+            "Use"
+        elsif level == 2
+            "Manage"
+        elsif level == 3
+            "Admin"
+        elsif level == 4
+            "All"
+        else
+            "-"
+        end
     end
 end

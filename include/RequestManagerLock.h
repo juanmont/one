@@ -43,7 +43,10 @@ protected:
     void request_execute(xmlrpc_c::paramList const& _paramList,
                          RequestAttributes& att);
 
-    virtual int lock_db(PoolObjectSQL * object, const string& owner) = 0;
+    int lock_db(PoolObjectSQL * object, const int owner, const int req_id, const int level)
+    {
+        return object->lock_db(owner, req_id, level);
+    };
 };
 
 /* ------------------------------------------------------------------------- */
@@ -54,7 +57,7 @@ class RequestManagerUnlock: public Request
 protected:
     RequestManagerUnlock(const string& method_name,
                          const string& help)
-        :Request(method_name, "A:sis", help)
+        :Request(method_name, "A:sii", help)
     {
         auth_op = AuthRequest::MANAGE;
     };
@@ -66,7 +69,10 @@ protected:
     void request_execute(xmlrpc_c::paramList const& _paramList,
                          RequestAttributes& att);
 
-    virtual void unlock_db(PoolObjectSQL * object, const string& owner) = 0;
+    void unlock_db(PoolObjectSQL * object, const int owner, const int req_id)
+    {
+        object->unlock_db(owner, req_id);
+    };
 };
 
 /* ------------------------------------------------------------------------- */
@@ -85,11 +91,6 @@ public:
     };
 
     ~DocumentLock(){};
-
-    int lock_db(PoolObjectSQL * object, const string& owner)
-    {
-        return static_cast<Document*>(object)->lock_db(owner);
-    };
 };
 
 /* ------------------------------------------------------------------------- */
@@ -108,15 +109,39 @@ public:
     };
 
     ~DocumentUnlock(){};
-
-    void unlock_db(PoolObjectSQL * object, const string& owner)
-    {
-        return static_cast<Document*>(object)->unlock_db(owner);
-    };
 };
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
+
+class VirtualMachineLock: public RequestManagerLock
+{
+public:
+    VirtualMachineLock():
+        RequestManagerLock("one.vm.lock",
+                           "Lock a VM"){
+        Nebula& nd  = Nebula::instance();
+        auth_object = PoolObjectSQL::VM;
+        pool        =  nd.get_vmpool();
+    };
+
+    ~VirtualMachineLock(){};
+};
 /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+class VirtualMachineUnlock: public RequestManagerUnlock
+{
+public:
+    VirtualMachineUnlock():
+        RequestManagerUnlock("one.vm.unlock",
+                           "Lock a VM"){
+        Nebula& nd  = Nebula::instance();
+        auth_object = PoolObjectSQL::VM;
+        pool        =  nd.get_vmpool();
+    };
+
+    ~VirtualMachineUnlock(){};
+};
 
 #endif

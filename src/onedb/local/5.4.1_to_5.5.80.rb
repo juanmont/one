@@ -33,6 +33,8 @@ module Migrator
 
         feature_5189()
 
+        feature_1377()
+
         log_time()
 
         return true
@@ -122,5 +124,28 @@ module Migrator
         @db.run "DROP TABLE old_host_pool;"
 
         STDERR.puts "  > You can now delete #{az_driver_conf} file"
+    end
+
+    ########################################################################
+    # Feature #1377: Add attribute user_lock to vm
+    ########################################################################
+    def feature_1377()
+
+        @db.run "DROP TABLE IF EXISTS old_vm_pool;"
+        @db.run "ALTER TABLE vm_pool RENAME TO old_vm_pool;"
+        create_table(:vm_pool)
+
+        @db.transaction do
+            @db.fetch("SELECT * FROM old_vm_pool") do |row|
+                doc = Nokogiri::XML(row[:body],nil,NOKOGIRI_ENCODING){|c| c.default_xml.noblanks}
+
+                doc.root.add_child(doc.create_element("USER_LOCK")).content = "0"
+
+                row[:body] = doc.root.to_s
+                @db[:vm_pool].insert(row)
+            end
+        end
+
+        @db.run "DROP TABLE old_vm_pool;"
     end
 end

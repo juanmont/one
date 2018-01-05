@@ -382,6 +382,8 @@ void RequestManager::register_xml_methods()
     // Lock Methods
     xmlrpc_c::methodPtr doc_lock(new DocumentLock());
     xmlrpc_c::methodPtr doc_unlock(new DocumentUnlock());
+    xmlrpc_c::methodPtr vm_lock(new VirtualMachineLock());
+    xmlrpc_c::methodPtr vm_unlock(new VirtualMachineUnlock());
 
     // PoolInfo Methods
     xmlrpc_c::methodPtr hostpool_info(new HostPoolInfo());
@@ -495,6 +497,8 @@ void RequestManager::register_xml_methods()
     RequestManagerRegistry.addMethod("one.vm.disksnapshotdelete", vm_dsnap_delete);
     RequestManagerRegistry.addMethod("one.vm.recover", vm_recover);
     RequestManagerRegistry.addMethod("one.vm.updateconf", vm_updateconf);
+    RequestManagerRegistry.addMethod("one.vm.lock", vm_lock);
+    RequestManagerRegistry.addMethod("one.vm.unlock", vm_unlock);
     RequestManagerRegistry.addMethod("one.vm.diskresize", vm_disk_resize);
 
     RequestManagerRegistry.addMethod("one.vmpool.info", vm_pool_info);
