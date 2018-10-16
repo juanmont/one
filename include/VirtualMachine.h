@@ -1053,8 +1053,9 @@ public:
     /**
      *  Releases all disk images taken by this Virtual Machine
      *    @param quotas disk space to free from image datastores
+     *    @param check_state to update image state based on VM state
      */
-    void release_disk_images(vector<Template *>& quotas);
+    void release_disk_images(vector<Template *>& quotas, bool check_state);
 
     /**
      *  @return reference to the VirtualMachine disks
@@ -1489,6 +1490,19 @@ public:
             Template **vm_quotas, bool& io, bool& vo)
     {
         disks.delete_snapshot(disk_id, snap_id, ds_quotas, vm_quotas, io, vo);
+    }
+
+    /**
+     *  Renames the snap_id from the list
+     *    @param disk_id of the disk
+     *    @param snap_id of the snapshot
+     *    @param new_name of the snapshot
+     *    @return 0 on success
+     */
+    int rename_disk_snapshot(int disk_id, int snap_id, const string& new_name,
+            string& error_str)
+    {
+        return disks.rename_snapshot(disk_id, snap_id, new_name, error_str);
     }
 
     /**

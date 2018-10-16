@@ -1242,7 +1242,8 @@ EOT
             user, object=*res
 
             template<<"#{section.upcase}=[\n"
-            if object.casecmp? "auto"
+
+            if object.downcase == "auto"
                 template<<"  NETWORK_MODE=\"#{object}\"\n"
             else
                 template<<"  #{name.upcase}_UNAME=\"#{user}\",\n" if user

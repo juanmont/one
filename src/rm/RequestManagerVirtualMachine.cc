@@ -2575,6 +2575,7 @@ void VirtualMachineRecover::request_execute(
 
         case 3: //delete
         case 4: //delete-recreate set same as delete in OpenNebulaTemplate
+        case 5: //delete-db
             aop = nd.get_vm_auth_op(History::DELETE_ACTION);
             break;
 
@@ -2618,6 +2619,9 @@ void VirtualMachineRecover::request_execute(
 
         case 4: //delete-recreate
             rc = dm->delete_recreate(vm, att, error);
+            break;
+        case 5:
+            rc = dm->delete_vm_db(vm, att, error);
             break;
     }
 
@@ -2971,6 +2975,72 @@ void VirtualMachineDiskSnapshotDelete::request_execute(
     {
         success_response(id, att);
     }
+
+    return;
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
+void VirtualMachineDiskSnapshotRename::request_execute(xmlrpc_c::paramList const& paramList,
+            RequestAttributes& att)
+{
+    VirtualMachine *  vm;
+
+    ostringstream oss;
+
+    const VirtualMachineDisk * disk;
+
+    int rc;
+
+    int id               = xmlrpc_c::value_int(paramList.getInt(1));
+    int did              = xmlrpc_c::value_int(paramList.getInt(2));
+    int snap_id          = xmlrpc_c::value_int(paramList.getInt(3));
+    string new_snap_name = xmlrpc_c::value_string(paramList.getString(4));
+
+    if ( vm_authorization(id, 0, 0, att, 0, 0, 0, auth_op) == false )
+    {
+        return;
+    }
+
+    if ((vm = get_vm(id, att)) == 0)
+    {
+        oss << "Could not rename the snapshot for VM " << id
+            << ", VM does not exist";
+
+        att.resp_msg = oss.str();
+
+        return;
+    }
+
+    disk = (const_cast<const VirtualMachine *>(vm))->get_disk(did);
+
+    if (disk == 0)
+    {
+        att.resp_msg = "VM disk does not exist";
+        failure_response(ACTION, att);
+
+        vm->unlock();
+
+        return;
+    }
+
+    rc = vm->rename_disk_snapshot(did, snap_id, new_snap_name, att.resp_msg);
+
+    if ( rc != 0 )
+    {
+        failure_response(ACTION, att);
+	
+	vm->unlock();
+	    
+	return;
+    }
+    
+    success_response(id, att);
+        
+    pool->update(vm);
+
+    vm->unlock();
 
     return;
 }
