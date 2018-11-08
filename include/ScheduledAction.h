@@ -20,6 +20,9 @@
 #include <set>
 
 #include "VirtualMachineAttribute.h"
+#include "VirtualMachinePool.h"
+#include "VirtualMachine.h"
+#include "Nebula.h"
 
 /**
  * The VirtualMachine SCHED_ACTION attribute
@@ -108,6 +111,11 @@ public:
      *    @return -1 if action ended 0 otherwise
      */
     int next_action();
+
+    /**
+     *  Parse arguments like $VMID, $TEMPLATE, $DISKID
+     */
+    void parse_sched_arguments(int vm_id, string& parsed);
 };
 
 /**

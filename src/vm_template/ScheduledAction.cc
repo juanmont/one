@@ -201,6 +201,44 @@ int SchedAction::ends_in_range(EndOn eo, std::string& error)
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
+void SchedAction::parse_sched_arguments(int vm_id, string& parsed)
+{
+    size_t  found;
+
+    found = parsed.find("$VMID");
+
+    VirtualMachinePool * vmpool = Nebula::instance().get_vmpool();
+    VirtualMachine * vm;
+
+    if ( found !=string::npos )
+    {
+        ostringstream oss;
+        oss << vm_id;
+
+        parsed.replace(found, 3, oss.str());
+    }
+
+    vm = vmpool->get(vm_id);
+
+    if ( vm == 0 )
+    {
+        return;
+    }
+
+    found = parsed.find("$TEMPLATE");
+
+    if ( found != string::npos )
+    {
+        string templ;
+        parsed.replace(found, 9, vm->to_xml64(templ));
+    }
+
+    vm->unlock();
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 int SchedAction::parse(std::string& error, bool clean)
 {
     Repeat r;
