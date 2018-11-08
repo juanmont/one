@@ -1748,7 +1748,11 @@ int Scheduler::do_scheduled_actions()
             }
             else
             {
-                rc = vmapool->action(vm->get_oid(), action_st, error_msg);
+                string args_parsed = (*action)->vector_value("ARGS");
+
+                (*action)->parse_sched_arguments(vm->get_oid(), args_parsed);
+
+                rc = vmapool->action(vm->get_oid(), action_st, *action , error_msg);
 
                 if (rc == 0)
                 {
