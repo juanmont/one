@@ -15,6 +15,7 @@
 /* -------------------------------------------------------------------------- */
 
 #include "VirtualMachinePoolXML.h"
+
 #include <stdexcept>
 #include <iomanip>
 
@@ -282,38 +283,54 @@ int VirtualMachineActionsPoolXML::set_up()
 /* -------------------------------------------------------------------------- */
 
 int VirtualMachineActionsPoolXML::action(
-        int             vid,
-        const string&   action,
-        string&         error_msg) const
+        int                 vid,
+        const string&       action_st,
+        SchedAction *       action,
+        string&             error_msg) const
 {
     xmlrpc_c::value result;
     bool            success;
+    int             rc;
 
     try
     {
-        if (action == "snapshot-create")
+        if ( action_st == "custom" )
         {
-            client->call("one.vm.snapshotcreate", "is", &result, vid, "");
+            string cmd_args = action->vector_value("CMD") + " " + action->vector_value("ARGS");
+
+            rc = system(  cmd_args.c_str() );
+
+            if ( rc != 0 )
+            {
+                return -1;
+            }
         }
         else
         {
-            client->call("one.vm.action", "si", &result, action.c_str(), vid);
+            if (action_st == "snapshot-create")
+            {
+                client->call("one.vm.snapshotcreate", "is", &result, vid, "");
+            }
+            else
+            {
+                client->call("one.vm.action", "si", &result, action_st.c_str(), vid);
+            }
+
+            vector<xmlrpc_c::value> values =
+            xmlrpc_c::value_array(result).vectorValueValue();
+
+            success = xmlrpc_c::value_boolean(values[0]);
+
+            if (!success)
+            {
+                error_msg = xmlrpc_c::value_string(  values[1] );
+
+                return -1;
+            }
         }
     }
     catch (exception const& e)
     {
-        return -1;
-    }
-
-    vector<xmlrpc_c::value> values =
-            xmlrpc_c::value_array(result).vectorValueValue();
-
-    success = xmlrpc_c::value_boolean(values[0]);
-
-    if (!success)
-    {
-        error_msg = xmlrpc_c::value_string(  values[1] );
-
         return -1;
     }
 

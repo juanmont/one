@@ -20,6 +20,7 @@
 
 #include "PoolXML.h"
 #include "VirtualMachineXML.h"
+#include "ScheduledAction.h"
 
 using namespace std;
 
@@ -152,12 +153,13 @@ public:
      * Calls one.vm.action
      *
      * @param vid The VM id
-     * @param action Action argument (terminate, hold, release...)
+     * @param action_st Action string argument (terminate, hold, release...)
+     * @param action Action argument to retrieve the command and his extra arguments
      * @param error_msg Error reason, if any
      *
      * @return 0 on success, -1 otherwise
      */
-    int action(int vid, const string &action, string &error_msg) const;
+    int action(int vid, const string &action_st, SchedAction * action, string &error_msg) const;
 
 protected:
 

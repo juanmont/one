@@ -495,7 +495,9 @@ int VirtualMachineXML::parse_action_name(string& action_st)
         // Compatibility with 4.x
         && action_st != "shutdown"
         && action_st != "shutdown-hard"
-        && action_st != "delete")
+        && action_st != "delete"
+
+        && action_st != "custom")
     {
         return -1;
     }

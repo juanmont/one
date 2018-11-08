@@ -218,7 +218,7 @@ void SchedAction::parse_sched_arguments(int vm_id, string& parsed)
         parsed.replace(found, 3, oss.str());
     }
 
-    vm = vmpool->get(vm_id);
+    vm = vmpool->get_ro(vm_id);
 
     if ( vm == 0 )
     {
@@ -232,8 +232,6 @@ void SchedAction::parse_sched_arguments(int vm_id, string& parsed)
         string templ;
         parsed.replace(found, 9, vm->to_xml64(templ));
     }
-
-    vm->unlock();
 }
 
 /* -------------------------------------------------------------------------- */
