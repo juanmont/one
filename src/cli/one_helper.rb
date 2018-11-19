@@ -1242,6 +1242,7 @@ EOT
             user, object=*res
 
             template<<"#{section.upcase}=[\n"
+
             if object.downcase == "auto"
                 template<<"  NETWORK_MODE=\"#{object}\"\n"
             else
